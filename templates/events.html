@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>여행 일정 관리</title>
+
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.css" rel="stylesheet">
+
+    <!-- 기본 스타일 -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        header {
+            background-color: #343a40;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .calendar-wrapper {
+            margin-top: 30px;
+        }
+
+        .event-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .event-form input, .event-form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .event-form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .event-form button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 수정, 삭제 버튼 숨기기 */
+        .edit-delete-buttons {
+            display: none;
+        }
+
+        /* 이벤트에 마우스를 올리면 버튼 보이기 */
+        .fc-event:hover .edit-delete-buttons {
+            display: inline-block;
+        }
+
+        /* 버튼 스타일 */
+        .edit-delete-buttons button {
+            margin-left: 5px;
+            padding: 2px 5px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .edit-delete-buttons .delete-button {
+            background-color: red;
+        }
+        .edit-delete-buttons .edit-button {
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>여행 일정 관리</h1>
+</header>
+
+<div class="container">
+    <div id="calendar" class="calendar-wrapper"></div>
+    <div class="event-form">
+        <h3>새로운 여행 일정 추가</h3>
+        <form id="eventForm">
+            <label for="eventTitle">제목</label>
+            <input type="text" id="eventTitle" required>
+
+            <label for="eventDescription">설명</label>
+            <textarea id="eventDescription" rows="3" required></textarea>
+
+            <label for="eventStart">시작 날짜</label>
+            <input type="date" id="eventStart" required>
+
+            <label for="eventEnd">종료 날짜</label>
+            <input type="date" id="eventEnd" required>
+
+            <button type="submit">일정 추가</button>
+        </form>
+    </div>
+</div>
+
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        let isStartSelected = true;
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            displayEventTime: false,
+            events: function(info, successCallback, failureCallback) {
+                fetch('/events/api')
+                    .then(response => response.json())
+                    .then(data => successCallback(data))
+                    .catch(err => failureCallback(err));
+            },
+            dateClick: function(info) {
+                if (isStartSelected) {
+                    document.getElementById('eventStart').value = info.dateStr;
+                    alert('시작 날짜가 설정되었습니다: ' + info.dateStr);
+                    isStartSelected = false;
+                } else {
+                    document.getElementById('eventEnd').value = info.dateStr;
+                    alert('종료 날짜가 설정되었습니다: ' + info.dateStr);
+                    isStartSelected = true;
+                }
+            },
+            eventDidMount: function(info) {
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.classList.add('edit-delete-buttons');
+                const eventId = info.event.id;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '삭제';
+                deleteButton.classList.add('delete-button');
+                deleteButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (confirm('정말로 삭제하시겠습니까?')) {
+                        fetch(`/events/api/${evnetId}`, {
+                            method: 'DELETE'
+                        })
+                        .then(() => {
+                            alert('이벤트가 삭제되었습니다.');
+                            calendar.refetchEvents();
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('삭제 중 오류가 발생했습니다.');
+                        });
+                    }
+                });
+
+                const editButton = document.createElement('button');
+                editButton.textContent = '수정';
+                editButton.classList.add('edit-button');
+                editButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const newTitle = prompt('새로운 제목을 입력하세요:', info.event.title);
+                    const newDescription = prompt('새로운 설명을 입력하세요:', info.event.extendedProps.description);
+                    if (newTitle) {
+                        fetch(`/events/api/${eventId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title: newTitle,
+                                description: newDescription,
+                                startDate: info.event.startStr,
+                                endDate: info.event.endStr
+                            })
+                        })
+                        .then(() => {
+                            alert('이벤트가 수정되었습니다.');
+                            calendar.refetchEvents();
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('수정 중 오류가 발생했습니다.');
+                        });
+                    }
+                });
+
+                buttonsDiv.appendChild(editButton);
+                buttonsDiv.appendChild(deleteButton);
+
+                const eventContent = info.el.querySelector('.fc-event-title');
+                if (eventContent) {
+                    eventContent.appendChild(buttonsDiv);
+                }
+            }
+        });
+
+        calendar.render();
+
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('eventTitle').value;
+            const description = document.getElementById('eventDescription').value;
+            const start = document.getElementById('eventStart').value;
+            const end = document.getElementById('eventEnd').value;
+
+            const adjustedEnd = new Date(end);
+            adjustedEnd.setDate(adjustedEnd.getDate() + 1);
+            const adjustedEndStr = adjustedEnd.toISOString().split('T')[0];
+
+            const eventData = {
+                title: title,
+                description: description,
+                startDate: start,
+                endDate: adjustedEndStr
+            };
+
+            fetch('/events/api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('일정이 추가되었습니다.');
+                calendar.refetchEvents();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('일정 추가에 실패했습니다.');
+            });
+        });
+    });
+</script>
+<script>
+    fetch('/header.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('header-placeholder').innerHTML = data;
+        })
+        .catch(error => console.error('헤더 로드 오류:', error));
+
+    fetch('/footer.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('footer-placeholder').innerHTML = data;
+        })
+        .catch(error => console.error('푸터 로드 오류:', error));
+</script>
+
+</body>
+</html>

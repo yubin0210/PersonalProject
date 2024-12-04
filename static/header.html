@@ -1,0 +1,80 @@
+<header>
+  <style>
+    /* 기본 여백 제거 */
+    body, header {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Header 스타일 */
+    header {
+        background-color: #2c3e50; /* 어두운 블루-그레이 */
+        color: white;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: Arial, sans-serif;
+    }
+
+    /* 로고 스타일 */
+    .logo {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #f4d03f; /* 소프트 골드 */
+        text-decoration: none;
+    }
+
+    /* 네비게이션 메뉴 스타일 */
+    .nav-menu {
+        list-style: none;
+        display: flex;
+        gap: 4rem;
+        margin: 0;
+        padding: 0;
+    }
+
+    .nav-menu li {
+        display: inline;
+    }
+
+    .nav-menu a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .nav-menu a:hover {
+        color: #f4d03f; /* 소프트 골드 */
+    }
+
+    /* 유저 옵션 스타일 */
+    .user-options a {
+        color: white;
+        text-decoration: none;
+        margin-left: 1rem;
+    }
+
+    .user-options a:hover {
+        color: #f4d03f; /* 소프트 골드 */
+    }
+  </style>
+
+  <!-- 로고 영역 -->
+  <a href="/home" class="logo">Trip Mate</a>
+
+  <!-- 네비게이션 메뉴 -->
+  <nav>
+    <ul class="nav-menu">
+      <li><a href="/home">Home</a></li>
+      <li><a href="/recommend">AI 추천 루트</a></li>
+      <li><a href="/events">캘린더</a></li>
+      <li><a href="/post">여행이야기</a></li>
+    </ul>
+  </nav>
+
+  <!-- 유저 옵션 -->
+  <div class="user-options">
+    <a href="/logout">Logout</a>
+  </div>
+</header>
